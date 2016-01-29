@@ -14,9 +14,9 @@
 $wgExtensionCredits['other'][] = array(
 	'path' => __FILE__,
 	'name' => 'TwitterFBLike', 
-	'author' => 'Barry Coughlan', 
+	'author' => 'Barry Coughlan (modifications: Lenz Weber)', 
 	'url' => 'http://mediawiki.org/wiki/Extension:TwitterFBLike',
-	'description' => 'Template that inserts Twitter and Facebook "Like" buttons on a page',
+	'description' => 'Template that inserts Twitter and Facebook "Share" buttons on a page',
 );
 
 $wgHooks['ParserFirstCallInit'][] = 'twitterFBLikeParserFunction_Setup';
@@ -38,11 +38,13 @@ function twitterFBLikeParserFunction_Magic( &$magicWords, $langCode ) {
 function twitterFBLikeParserFeedHead(&$out, &$sk) {
 	global $wgScriptPath;
 	$out->addHeadItem('twitterFBLike.css','<link rel="stylesheet" type="text/css" href="'.$wgScriptPath.'/extensions/TwitterFBLike/TwitterFBLike.css"/>');
+        $out->prependHTML('<div id="fb-root"></div>');
+
 	return $out;
 }
 
  
-function twitterFBLikeParserFunction_Render( &$parser, $param1 = '', $param2 = '', $param3 = '' ) {
+function twitterFBLikeParserFunction_Render( &$parser, $param1 = '') {
 		global $wgSitename;
 	
 		if ($param1 === "left" || $param1 === "right") {
@@ -51,27 +53,7 @@ function twitterFBLikeParserFunction_Render( &$parser, $param1 = '', $param2 = '
 			$float = "none";
 		}
 		
-		if ($param2 === "small") {
-			$twitterextra="";
-			$size="small";
-			$linebreak = "";
-			$layout = "button_count";
-			$height = "21";
-		} else {
-			$twitterextra="data-count=\"vertical\"";
-			$size="big";
-			$layout = "box_count";
-			$linebreak = "<br />";
-			$height = "65";
-		}
-		
-		if ($param3 === "like") {
-			$width = 75;
-			$action="like";
-		} else {
-			$width = 115;
-			$action="recommend";
-		}
+		$size="small";
 		
 		//Get page title and URL
 		$title = $parser->getTitle();
@@ -85,15 +67,12 @@ function twitterFBLikeParserFunction_Render( &$parser, $param1 = '', $param2 = '
 		
 		$output = "
 			<div class='twitterFBLike_$size' twitterFBLike_$urltitle' style='float: ${float}'>
-				<a style='display: none' href='http://twitter.com/share' class='twitter-share-button' data-text='$text' data-url='$url' $twitterextra>
-					Tweet
-				</a>
-				<script src='http://platform.twitter.com/widgets.js' type='text/javascript'></script>
-				<iframe src='http://www.facebook.com/plugins/like.php?href=${url}&layout=${layout}&show_faces=false&width=450&action=$action&colorscheme=light&height=65'
-					scrolling='no' frameborder='0' class='fb-like' style='width:${width}px; height: ${height}px;' allowTransparency='true'>
-				</iframe>
+				<a style='display: none' href='http://twitter.com/share' class='twitter-share-button' data-text='$text' data-url='$url' $twitterextra>Tweet</a>
+				<div style='line-height: 11px;' class='fb-share-button' data-href='${url}' data-layout='button'></div>
+				<script src='//platform.twitter.com/widgets.js' type='text/javascript'></script>
+                                <script src='//connect.facebook.net/en_US/sdk.js#xfbml=1&amp;version=v2.5&amp;appId=198618710208347' id='facebook-jssdk'></script>
 			</div>
 			";
 
-		return $parser->insertStripItem($output, $parser->mStripState);;
+		return $parser->insertStripItem(preg_replace("/\n/",'',$output), $parser->mStripState);
 }
